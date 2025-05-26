@@ -169,7 +169,7 @@ async function runPrePush() {
       
       if (hasMobileChanges) {
         Logger.info('Validating mobile app configuration...', 'BUILD');
-        const mobileConfigResult = executeCommand('cd mobile && npx expo doctor', {
+        const mobileConfigResult = executeCommand('cd mobile && npx expo-doctor', {
           description: 'Validate mobile app configuration'
         });
         
