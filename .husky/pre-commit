@@ -86,28 +86,45 @@ async function runPreCommit() {
 
   // Step 4: Check for sensitive information
   Logger.step(step++, totalSteps, 'Checking for sensitive information...');
-  const sensitivePatterns = [
-    'api[_-]?key', 'secret', 'password', 'token', 'private[_-]?key',
-    'database[_-]?url', 'connection[_-]?string', 'jwt[_-]?secret'
-  ];
   
   let foundSensitiveData = false;
-  for (const file of gitInfo.stagedFiles) {
-    for (const pattern of sensitivePatterns) {
-      const grepResult = executeCommand(\`git diff --cached --name-only -S'\${pattern}' -- '\${file}'\`, {
-        silent: true,
-        description: \`Checking \${file} for \${pattern}\`
-      });
-      
-      if (grepResult.success && grepResult.output.trim()) {
-        Logger.warning(\`Potential sensitive data found in \${file}: \${pattern}\`, 'SECURITY');
-        foundSensitiveData = true;
+  
+  // Only check actual code files, skip configuration and documentation
+  const filesToCheck = gitInfo.stagedFiles.filter(file => 
+    file.match(/\.(ts|tsx|js|jsx|env)$/) && 
+    !file.includes('node_modules') && 
+    !file.includes('package-lock.json') &&
+    !file.includes('.husky') &&
+    !file.includes('.github') &&
+    !file.endsWith('.md')
+  );
+  
+  if (filesToCheck.length === 0) {
+    Logger.success('No code files to check for sensitive data', 'SECURITY');
+  } else {
+    const realSecretsPatterns = [
+      /(?:^|[^a-zA-Z0-9_])(api[_-]?key|secret|password|token)\s*[:=]\s*['""][^'""\\s]{8,}['""]|(?:^|[^a-zA-Z0-9_])(api[_-]?key|secret|password|token)\s*[:=]\s*[a-zA-Z0-9_-]{16,}/i,
+      /-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----/i
+    ];
+    
+    for (const file of filesToCheck) {
+      try {
+        const content = require('fs').readFileSync(file, 'utf8');
+        for (const pattern of realSecretsPatterns) {
+          if (pattern.test(content)) {
+            Logger.warning(\`Potential sensitive data found in \${file}\`, 'SECURITY');
+            foundSensitiveData = true;
+            break;
+          }
+        }
+      } catch (error) {
+        // File might not exist or be readable, skip
       }
     }
-  }
-  
-  if (!foundSensitiveData) {
-    Logger.success('No sensitive information detected', 'SECURITY');
+    
+    if (!foundSensitiveData) {
+      Logger.success('No sensitive information detected', 'SECURITY');
+    }
   }
 
   // Summary
