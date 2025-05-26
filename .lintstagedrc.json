@@ -1,13 +1,3 @@
 {
-  "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-  "*.{js,jsx}": ["eslint --fix", "prettier --write"],
-  "*.{json,md,yml,yaml}": ["prettier --write"],
-  "mobile/**/*.{ts,tsx}": [
-    "cd mobile && npm run lint:fix",
-    "cd mobile && npm run format"
-  ],
-  "backend/**/*.{ts,tsx}": [
-    "cd backend && npm run lint:fix",
-    "cd backend && npm run format"
-  ]
+  "*.{ts,tsx,js,jsx,json,md,yml,yaml}": ["prettier --write"]
 }
