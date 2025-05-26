@@ -50,7 +50,7 @@ module.exports = {
         'tests', // Test-related changes
       ],
     ],
-    'subject-case': [2, 'always', 'lower-case'],
+    'subject-case': [2, 'always', ['lower-case', 'upper-case']],
     'header-max-length': [0, 'never'],
     'body-max-line-length': [2, 'always', 100],
     'footer-max-line-length': [2, 'always', 100],

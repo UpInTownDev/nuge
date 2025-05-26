@@ -14,7 +14,7 @@
     "build:mobile": "cd mobile && npx expo build",
     "build:backend": "cd backend && npm run build",
     "install:all": "npm install && cd mobile && npm install && cd ../backend && npm install",
-    "prepare": "husky",
+    "prepare": "./scripts/setup-husky.sh",
     "lint": "npm run lint:mobile && npm run lint:backend",
     "lint:mobile": "cd mobile && npm run lint",
     "lint:backend": "cd backend && npm run lint",
@@ -41,7 +41,8 @@
     "prettier": "^3.5.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "config": {
     "commitizen": {
