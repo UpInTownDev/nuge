@@ -36,7 +36,7 @@ export default tseslint.config(
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/prefer-const': 'error',
+      // '@typescript-eslint/prefer-const': 'error', // Disabled - conflicts with ESLint 9
       '@typescript-eslint/no-var-requires': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
@@ -114,6 +114,13 @@ export default tseslint.config(
       // DTOs and entities can have class properties without explicit types
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.module.ts'],
+    rules: {
+      // NestJS modules are often empty classes with decorators
+      '@typescript-eslint/no-extraneous-class': 'off',
     },
   }
 );
