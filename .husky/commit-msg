@@ -1,0 +1,94 @@
+#!/usr/bin/env sh
+
+# Commit-msg hook for Nuge project
+# Validates commit message format using commitlint
+
+# Enable debugging if DEBUG=true is set
+if [ "$DEBUG" = "true" ]; then
+  set -x
+fi
+
+node -e "
+const { Logger, executeCommand, Timer } = require('./scripts/git-hooks-utils.js');
+const fs = require('fs');
+
+async function runCommitMsg() {
+  const timer = new Timer();
+  Logger.title('COMMIT MESSAGE VALIDATION');
+  
+  // Get commit message file path from arguments
+  const commitMsgFile = process.argv[2] || '.git/COMMIT_EDITMSG';
+  
+  if (!fs.existsSync(commitMsgFile)) {
+    Logger.error('Commit message file not found: ' + commitMsgFile, 'FILE');
+    process.exit(1);
+  }
+  
+  // Read commit message
+  const commitMessage = fs.readFileSync(commitMsgFile, 'utf8').trim();
+  
+  if (!commitMessage) {
+    Logger.error('Empty commit message', 'MSG');
+    process.exit(1);
+  }
+  
+  Logger.info('Validating commit message...', 'COMMITLINT');
+  Logger.debug('Message: ' + commitMessage, 'MSG');
+  
+  // Run commitlint
+  const commitlintResult = executeCommand(\`echo '\${commitMessage}' | npx commitlint\`, {
+    description: 'Validate commit message format'
+  });
+  
+  if (!commitlintResult.success) {
+    Logger.error('Commit message validation failed', 'COMMITLINT');
+    Logger.info('', 'HELP');
+    Logger.info('📋 Commit Message Format Guidelines:', 'HELP');
+    Logger.info('   type(scope): description', 'HELP');
+    Logger.info('', 'HELP');
+    Logger.info('📝 Examples:', 'HELP');
+    Logger.info('   feat(mobile): add vendor location tracking', 'HELP');
+    Logger.info('   fix(backend): resolve authentication bug', 'HELP');
+    Logger.info('   docs(api): update endpoint documentation', 'HELP');
+    Logger.info('   style(ui): format vendor card component', 'HELP');
+    Logger.info('', 'HELP');
+    Logger.info('🔍 Valid types:', 'HELP');
+    Logger.info('   feat, fix, docs, style, refactor, perf, test, build, ci, chore', 'HELP');
+    Logger.info('', 'HELP');
+    Logger.info('🎯 Valid scopes:', 'HELP');
+    Logger.info('   mobile, backend, vendors, orders, auth, maps, payments, etc.', 'HELP');
+    Logger.info('', 'HELP');
+    Logger.info('💡 Use \"npm run commit\" for interactive commit message creation', 'HELP');
+    
+    process.exit(1);
+  }
+  
+  Logger.success(\`Commit message validation passed in \${timer.elapsedFormatted()}\`, 'COMMITLINT');
+  
+  // Additional checks for commit message quality
+  const lines = commitMessage.split('\n');
+  const subject = lines[0];
+  
+  // Check subject length
+  if (subject.length > 72) {
+    Logger.warning('Subject line is longer than 72 characters', 'STYLE');
+  }
+  
+  // Check for proper capitalization
+  if (subject.match(/^[A-Z]/)) {
+    Logger.warning('Subject should start with lowercase letter', 'STYLE');
+  }
+  
+  // Check for period at end
+  if (subject.endsWith('.')) {
+    Logger.warning('Subject should not end with a period', 'STYLE');
+  }
+  
+  Logger.info('✨ Ready to commit!', 'READY');
+}
+
+runCommitMsg().catch(error => {
+  console.error('Commit message validation failed:', error);
+  process.exit(1);
+});
+" -- "$1" 

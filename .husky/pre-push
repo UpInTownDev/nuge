@@ -1,0 +1,203 @@
+#!/usr/bin/env sh
+
+# Pre-push hook for Nuge project
+# Runs comprehensive tests and checks before pushing to remote
+
+# Enable debugging if DEBUG=true is set
+if [ "$DEBUG" = "true" ]; then
+  set -x
+fi
+
+node -e "
+const { Logger, executeCommand, getGitInfo, hasChangesInPaths, Timer } = require('./scripts/git-hooks-utils.js');
+
+async function runPrePush() {
+  const timer = new Timer();
+  Logger.title('PRE-PUSH VALIDATION');
+  
+  // Get git information
+  const gitInfo = getGitInfo();
+  if (!gitInfo) {
+    process.exit(1);
+  }
+  
+  Logger.info(\`Branch: \${gitInfo.branch}\`, 'GIT');
+  Logger.info(\`Current commit: \${gitInfo.commit}\`, 'GIT');
+  
+  // Check if we're pushing to protected branches
+  const protectedBranches = ['main', 'master', 'production'];
+  if (protectedBranches.includes(gitInfo.branch)) {
+    Logger.warning(\`Pushing to protected branch: \${gitInfo.branch}\`, 'BRANCH');
+    Logger.info('Running comprehensive validation...', 'PROTECTION');
+  }
+  
+  let hasErrors = false;
+  let step = 1;
+  let totalSteps = 6;
+  
+  // Get list of changed files since last push
+  const changedFiles = executeCommand('git diff --name-only @{upstream}..HEAD', {
+    silent: true,
+    description: 'Get changed files since last push'
+  });
+  
+  const files = changedFiles.success ? changedFiles.output.trim().split('\n').filter(Boolean) : [];
+  const hasMobileChanges = hasChangesInPaths(files, ['^mobile/']);
+  const hasBackendChanges = hasChangesInPaths(files, ['^backend/']);
+  
+  if (!hasMobileChanges && !hasBackendChanges) {
+    totalSteps = 2; // Only run basic checks if no code changes
+  }
+  
+  // Step 1: Ensure working directory is clean
+  Logger.step(step++, totalSteps, 'Checking working directory...');
+  const statusResult = executeCommand('git status --porcelain', {
+    silent: true,
+    description: 'Check git working directory status'
+  });
+  
+  if (statusResult.success && statusResult.output.trim()) {
+    Logger.warning('Working directory has uncommitted changes', 'GIT');
+    Logger.info('Consider committing or stashing changes before pushing', 'HINT');
+  } else {
+    Logger.success('Working directory is clean', 'GIT');
+  }
+  
+  // Step 2: Validate branch protection rules
+  Logger.step(step++, totalSteps, 'Validating branch rules...');
+  if (protectedBranches.includes(gitInfo.branch)) {
+    // Check if CI is required for this branch
+    Logger.info('Protected branch detected - ensuring CI compatibility', 'PROTECTION');
+    
+    // Validate that required CI files exist
+    const requiredFiles = ['.github/workflows/ci-cd.yml'];
+    for (const file of requiredFiles) {
+      const fileExists = executeCommand(\`test -f \${file}\`, { silent: true });
+      if (!fileExists.success) {
+        Logger.error(\`Required CI file missing: \${file}\`, 'CI');
+        hasErrors = true;
+      }
+    }
+  }
+  
+  if (!hasErrors) {
+    Logger.success('Branch validation passed', 'PROTECTION');
+  }
+  
+  // Skip remaining steps if no code changes
+  if (!hasMobileChanges && !hasBackendChanges) {
+    Logger.info('No code changes detected. Skipping comprehensive tests.', 'SKIP');
+  } else {
+    // Step 3: Run linting
+    Logger.step(step++, totalSteps, 'Running linting checks...');
+    const lintResult = executeCommand('npm run lint', {
+      description: 'Lint all projects'
+    });
+    
+    if (!lintResult.success) {
+      Logger.error('Linting failed', 'LINT');
+      hasErrors = true;
+    } else {
+      Logger.success('Linting passed', 'LINT');
+    }
+    
+    // Step 4: Run type checking
+    Logger.step(step++, totalSteps, 'Running type checking...');
+    const typeCheckResult = executeCommand('npm run type-check', {
+      description: 'Type check all projects'
+    });
+    
+    if (!typeCheckResult.success) {
+      Logger.error('Type checking failed', 'TYPE');
+      hasErrors = true;
+    } else {
+      Logger.success('Type checking passed', 'TYPE');
+    }
+    
+    // Step 5: Run tests
+    Logger.step(step++, totalSteps, 'Running tests...');
+    
+    if (hasBackendChanges) {
+      Logger.info('Running backend tests...', 'TEST');
+      const backendTestResult = executeCommand('cd backend && npm run test', {
+        description: 'Run backend unit tests'
+      });
+      
+      if (!backendTestResult.success) {
+        Logger.error('Backend tests failed', 'TEST');
+        hasErrors = true;
+      } else {
+        Logger.success('Backend tests passed', 'TEST');
+      }
+    }
+    
+    if (hasMobileChanges) {
+      Logger.info('Running mobile tests...', 'TEST');
+      const mobileTestResult = executeCommand('cd mobile && npm test -- --watchAll=false', {
+        description: 'Run mobile unit tests'
+      });
+      
+      if (!mobileTestResult.success) {
+        Logger.error('Mobile tests failed', 'TEST');
+        hasErrors = true;
+      } else {
+        Logger.success('Mobile tests passed', 'TEST');
+      }
+    }
+    
+    if (!hasBackendChanges && !hasMobileChanges) {
+      Logger.info('No test files to run', 'TEST');
+    }
+    
+    // Step 6: Build validation (for production branches)
+    if (protectedBranches.includes(gitInfo.branch)) {
+      Logger.step(step++, totalSteps, 'Validating builds...');
+      
+      if (hasBackendChanges) {
+        Logger.info('Building backend...', 'BUILD');
+        const backendBuildResult = executeCommand('cd backend && npm run build', {
+          description: 'Build backend for production'
+        });
+        
+        if (!backendBuildResult.success) {
+          Logger.error('Backend build failed', 'BUILD');
+          hasErrors = true;
+        } else {
+          Logger.success('Backend build passed', 'BUILD');
+        }
+      }
+      
+      if (hasMobileChanges) {
+        Logger.info('Validating mobile app configuration...', 'BUILD');
+        const mobileConfigResult = executeCommand('cd mobile && npx expo doctor', {
+          description: 'Validate mobile app configuration'
+        });
+        
+        if (!mobileConfigResult.success) {
+          Logger.warning('Mobile configuration validation had warnings', 'BUILD');
+        } else {
+          Logger.success('Mobile configuration is valid', 'BUILD');
+        }
+      }
+    }
+  }
+  
+  // Summary
+  Logger.subtitle('PRE-PUSH SUMMARY');
+  if (hasErrors) {
+    Logger.error(\`Pre-push validation failed after \${timer.elapsedFormatted()}\`, 'RESULT');
+    Logger.info('Fix the errors above before pushing.', 'HINT');
+    Logger.info('You can use --no-verify to skip this hook (not recommended)', 'HINT');
+    process.exit(1);
+  } else {
+    Logger.success(\`All pre-push validations passed in \${timer.elapsedFormatted()}\`, 'RESULT');
+    Logger.info(\`🚀 Ready to push \${files.length} changed files to \${gitInfo.branch}\`, 'READY');
+    process.exit(0);
+  }
+}
+
+runPrePush().catch(error => {
+  console.error('Pre-push hook failed:', error);
+  process.exit(1);
+});
+" 

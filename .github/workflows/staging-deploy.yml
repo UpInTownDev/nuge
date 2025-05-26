@@ -1,0 +1,47 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [ develop ]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Deploy Backend to Railway Staging
+        run: |
+          cd backend
+          npm install -g @railway/cli
+          railway up --service backend-staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+
+      - name: Build Mobile Preview
+        run: |
+          cd mobile
+          npm install -g @expo/cli eas-cli
+          npm ci
+          eas build --platform all --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish OTA Update to Staging
+        run: |
+          cd mobile
+          eas update --branch staging --message "Staging deployment from develop branch"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

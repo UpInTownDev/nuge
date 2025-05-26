@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Nuge",
+    "slug": "nuge-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.nuge.mobile",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Nuge needs location access to show nearby food vendors and help you discover amazing local food.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Nuge needs location access to show nearby food vendors and help you discover amazing local food.",
+        "NSCameraUsageDescription": "Nuge needs camera access to let you take photos of your orders and share food experiences.",
+        "NSPhotoLibraryUsageDescription": "Nuge needs photo library access to let you share images of your favorite vendors and food."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "app.nuge.mobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1a8a16fb-c896-437a-b2ac-eca6873b2eac"
+      }
+    },
+    "owner": "rvph"
+  }
+}

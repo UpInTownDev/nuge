@@ -1,0 +1,18 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.workingDirectories": ["mobile", "backend"],
+  "typescript.suggest.autoImports": true,
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.expo": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.expo": true
+  }
+}

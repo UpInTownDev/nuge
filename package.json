@@ -1,0 +1,63 @@
+{
+  "name": "nuge",
+  "version": "1.0.0",
+  "description": "Application de Localisation de Vendeurs Alimentaires Nomades",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "backend"
+  ],
+  "scripts": {
+    "dev:mobile": "cd mobile && npm start",
+    "dev:backend": "cd backend && npm run start:dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:mobile\"",
+    "build:mobile": "cd mobile && npx expo build",
+    "build:backend": "cd backend && npm run build",
+    "install:all": "npm install && cd mobile && npm install && cd ../backend && npm install",
+    "prepare": "husky",
+    "lint": "npm run lint:mobile && npm run lint:backend",
+    "lint:mobile": "cd mobile && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:fix": "npm run lint:fix:mobile && npm run lint:fix:backend",
+    "lint:fix:mobile": "cd mobile && npm run lint:fix",
+    "lint:fix:backend": "cd backend && npm run lint:fix",
+    "type-check": "npm run type-check:mobile && npm run type-check:backend",
+    "type-check:mobile": "cd mobile && npx tsc --noEmit",
+    "type-check:backend": "cd backend && npx tsc --noEmit",
+    "test": "npm run test:mobile && npm run test:backend",
+    "test:mobile": "cd mobile && npm test",
+    "test:backend": "cd backend && npm run test",
+    "commit": "cz"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "chalk": "^4.1.2",
+    "commitizen": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "lint-staged": {
+    "mobile/**/*.{ts,tsx}": [
+      "cd mobile && npm run lint:fix",
+      "cd mobile && npx tsc --noEmit"
+    ],
+    "backend/**/*.{ts,js}": [
+      "cd backend && npm run lint:fix",
+      "cd backend && npx tsc --noEmit"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
