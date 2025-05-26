@@ -38,3 +38,8 @@ npm run format
 git add .
 git commit -m "feat: test commit message format"
 ```
+
+## Status
+
+✅ All git hooks are now working correctly!
+✅ Configuration has been successfully completed and tested.
