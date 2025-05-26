@@ -2,9 +2,9 @@ name: Nuge CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
   NODE_VERSION: '18'
@@ -20,7 +20,7 @@ jobs:
     defaults:
       run:
         working-directory: ./backend
-    
+
     services:
       postgres:
         image: postgis/postgis:15-3.3
@@ -34,7 +34,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7-alpine
         options: >-
@@ -129,7 +129,7 @@ jobs:
     name: Deploy Backend to Railway
     runs-on: ubuntu-latest
     needs: [backend-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_DEPLOYMENT == 'true'
     defaults:
       run:
         working-directory: ./backend
@@ -165,7 +165,7 @@ jobs:
     name: Build Mobile App
     runs-on: ubuntu-latest
     needs: [mobile-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_DEPLOYMENT == 'true'
     defaults:
       run:
         working-directory: ./mobile
@@ -204,11 +204,10 @@ jobs:
     name: Deploy Mobile to Production
     runs-on: ubuntu-latest
     needs: [build-mobile]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_DEPLOYMENT == 'true'
     defaults:
       run:
         working-directory: ./mobile
-    environment: production
 
     steps:
       - name: Checkout code

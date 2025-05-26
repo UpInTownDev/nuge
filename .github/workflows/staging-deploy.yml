@@ -2,7 +2,7 @@ name: Staging Deployment
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
 
 env:
   NODE_VERSION: '18'
@@ -11,7 +11,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    environment: staging
+    if: vars.ENABLE_STAGING_DEPLOYMENT == 'true'
 
     steps:
       - name: Checkout code

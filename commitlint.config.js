@@ -30,6 +30,7 @@ module.exports = {
       'always',
       [
         'mobile', // Mobile app changes
+        'ci-cd', // CI/CD changes
         'backend', // Backend API changes
         'shared', // Shared utilities/types
         'deps', // Dependencies
