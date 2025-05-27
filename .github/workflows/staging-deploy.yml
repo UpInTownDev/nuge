@@ -5,7 +5,7 @@ on:
     branches: [develop]
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
 
 jobs:
   deploy-staging:
@@ -21,27 +21,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Deploy Backend to Railway Staging
         run: |
-          cd backend
           npm install -g @railway/cli
-          railway up --service backend-staging
+          cd backend && railway up --service backend-staging
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
 
       - name: Build Mobile Preview
         run: |
-          cd mobile
           npm install -g @expo/cli eas-cli
-          npm ci
-          eas build --platform all --profile preview --non-interactive
+          cd mobile && eas build --platform all --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish OTA Update to Staging
         run: |
-          cd mobile
-          eas update --branch staging --message "Staging deployment from develop branch"
+          cd mobile && eas update --branch staging --message "Staging deployment from develop branch"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
