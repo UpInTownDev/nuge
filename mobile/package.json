@@ -11,8 +11,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx && echo 'Linting completed'",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix && echo 'Linting completed'",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "type-check": "tsc --noEmit",
@@ -22,11 +22,14 @@
   },
   "dependencies": {
     "expo": "~53.0.9",
+    "expo-location": "~18.1.5",
+    "expo-permissions": "^14.4.0",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.2",
-    "react-native-reanimated": "^3.16.2",
-    "react-native-safe-area-context": "^5.4.1"
+    "react-native-maps": "1.20.1",
+    "react-native-reanimated": "^3.17.5",
+    "react-native-safe-area-context": "^5.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
